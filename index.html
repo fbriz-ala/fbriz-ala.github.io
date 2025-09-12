@@ -1,185 +1,256 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Media Devices with InputDevice Capabilities</title>
-  <style>
-    :root { --bg:#0b1220; --ink:#0f172a; --ring:#94a3b8; --muted:#475569; }
-    html,body{height:100%}
-    body{
-      margin:0; padding:2rem; font:16px/1.55 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial;
-      background:#f8fafc; color:var(--ink);
-    }
-    main{max-width:1000px; margin:auto}
-    h1{font-size:1.25rem; margin:0 0 1rem}
-    .actions{display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; margin:.25rem 0 1rem}
-    button{
-      appearance:none; border:1px solid var(--ring); background:white; color:var(--ink);
-      padding:.6rem .9rem; border-radius:.7rem; cursor:pointer; font-weight:600;
-    }
-    button[disabled]{opacity:.6; cursor:not-allowed}
-    pre{
-      margin:0; padding:1rem; background:#0b1220; color:#e5e7eb; border-radius:12px; overflow:auto;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
-    }
-    code{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size:.95rem}
-    .note{color:var(--muted); font-size:.9rem; margin-top:.75rem}
-    .status{font-size:.95rem; color:#0b5; margin-left:.25rem}
-    .warn{color:#b50}
-    .err{color:#b00}
-  </style>
-</head>
-<body>
-  <main>
-    <h1>Enumerate Devices + Capabilities</h1>
+ < !doctype html >
+ < html lang = "en" >
+     < head >
+     < meta charset = "utf-8" /  >
+     < meta name = "viewport" content = "width=device-width, initial-scale=1" /  >
+     < title > Media Devices with InputDevice Capabilities <  / title >
+     < style >
+    : root {
+    --bg: #0b1220;
+    --ink: #0f172a;
+    --ring: #94a3b8;
+    --muted: #475569;
+}
+html, body {
+    height: 100 %
+}
+body {
+    margin: 0;
+    padding: 2rem;
+    font: 16px / 1.55 system - ui,
+    -apple - system,
+    Segoe UI,
+    Roboto,
+    Ubuntu,
+    Cantarell,
+    Noto Sans,
+    Arial;
+    background: #f8fafc;
+    color: var(--ink);
+}
+main {
+    max - width: 1000px;
+    margin: auto
+}
+h1 {
+    font - size: 1.25rem;
+    margin: 0 0 1rem
+}
+.actions {
+    display: flex;
+    flex - wrap: wrap;
+    gap: .5rem;
+    align - items: center;
+    margin: .25rem 0 1rem
+}
+button {
+    appearance: none;
+    border: 1px solid var(--ring);
+    background: white;
+    color: var(--ink);
+    padding: .6rem.9rem;
+    border - radius: .7rem;
+    cursor: pointer;
+    font - weight: 600;
+}
+button[disabled]{
+    opacity: .6;
+    cursor: not - allowed
+}
+pre {
+    margin: 0;
+    padding: 1rem;
+    background: #0b1220;
+    color: #e5e7eb;
+    border - radius: 12px;
+    overflow: auto;
+    box - shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+}
+code {
+    font - family: ui - monospace,
+    SFMono - Regular,
+    Menlo,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+    font - size: .95rem
+}
+.note {
+    color: var(--muted);
+    font - size: .9rem;
+    margin - top: .75rem
+}
+.status {
+    font - size: .95rem;
+    color: #0b5;
+    margin - left: .25rem
+}
+.warn {
+    color: #b50
+}
+.err {
+    color: #b00
+}
+ <  / style >
+ <  / head >
+ < body >
+ < main >
+ < h1 > Enumerate Devices + Capabilities <  / h1 >
 
-    <div class="actions">
-      <button id="refresh" type="button">Refresh</button>
-      <button id="grant" type="button">Grant mic/cam access + Refresh</button>
-      <span id="status" class="status"></span>
-    </div>
+ < div class = "actions" >
+     < button id = "refresh" type = "button" > Refresh <  / button >
+     < button id = "grant" type = "button" > Grant mic / cam access + Refresh <  / button >
+     < span id = "status" class = "status" >  <  / span >
+     <  / div >
 
-    <pre id="out" aria-live="polite"><code></code></pre>
+     < pre id = "out" aria - live = "polite" >  < code >  <  / code >  <  / pre >
 
-    <p class="note">
-      Notes:
-      <br>• Secure context required (HTTPS or <code>localhost</code>).
-      <br>• Device <em>labels</em> are hidden until you allow mic/camera at least once.
-      <br>• This page calls <code>getCapabilities()</code> only when the enumerated item is an <code>InputDeviceInfo</code> (i.e., it exposes <code>getCapabilities</code>).
-      <br>• Output devices (e.g., speakers) won’t have capabilities here.
-    </p>
-  </main>
+     < p class = "note" >
+    Notes:
+     < br > • Secure context required(HTTPS or < code > localhost <  / code > ).
+     < br > • Device < em > labels <  / em > are hidden until you allow mic / camera at least once.
+     < br > • This page calls < code > getCapabilities() <  / code > only when the enumerated item is an < code > InputDeviceInfo <  / code > (i.e., it exposes < code > getCapabilities <  / code > ).
+     < br > • Output devices(e.g., speakers)won’t have capabilities here.
+     <  / p >
+     <  / main >
 
-  <script type="module">
+     < script type = "module" >
     const out = document.querySelector('#out code');
-    const statusEl = document.getElementById('status');
-    const refreshBtn = document.getElementById('refresh');
-    const grantBtn = document.getElementById('grant');
+const statusEl = document.getElementById('status');
+const refreshBtn = document.getElementById('refresh');
+const grantBtn = document.getElementById('grant');
 
-    function setStatus(msg, cls='') {
-      statusEl.textContent = msg || '';
-      statusEl.className = 'status ' + (cls || '');
-    }
+function setStatus(msg, cls = '') {
+    statusEl.textContent = msg || '';
+    statusEl.className = 'status ' + (cls || '');
+}
 
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-    async function simplifyDevice(d) {
-      // Keep the standard MediaDeviceInfo fields; add capabilities if present
-      const base = {
+async function simplifyDevice(d) {
+    // Keep the standard MediaDeviceInfo fields; add capabilities if present
+    const base = {
         kind: d.kind,
         deviceId: d.deviceId,
         label: d.label,
         groupId: d.groupId
-      };
+    };
 
-      // Only attach capabilities if this device object is an InputDeviceInfo
-      // (Chrome exposes getCapabilities() on InputDeviceInfo instances).
-      
+    // Only attach capabilities if this device object is an InputDeviceInfo
+    // (Chrome exposes getCapabilities() on InputDeviceInfo instances).
 
-      try{
-          let media = await navigator.mediaDevices.getUserMedia({video: {deviceId: {exact: d.deviceId}}});
-		  const track = media.getVideoTracks()[0];
-		  try {
-          // Some implementations return a plain object synchronously.
-          const caps = track.getCapabilities();
-          // Ensure serializable JSON (defensive copy)
-          base.capabilities = JSON.parse(JSON.stringify(caps));
-      } catch (err) {
-        base._errors = [`getCapabilities failed: ${err && err.message ? err.message : String(err)}`];
-      }
-	  try{
-		const sets = track.getSettings();
-		base.settings = JSON.parse(JSON.stringify(sets));
-	  } catch (err){
-		  base._errors = [`getSettings failed: ${err && err.message ? err.message : String(err)}`];
-	  }
-          
-		  track.stop();
-//          base.tracks = media.getTracks().map(t => {
-//            const {id, kind, label} = t;
-//            const baseTrack = {id, kind, label};
-//
-//            try {
-//              const caps = t.getCapabilities();
-//              baseTrack.capabilities = JSON.parse(JSON.stringify(caps));
-//            } catch (err) {
-//              baseTrack._errors [`getCapabilities failed: ${err && err.message ? err.message : String(err)}`];
-//            }
-//            return baseTrack;
-//          }); 
-//
-//          media = await navigator.mediaDevices.getUserMedia({video: {deviceId: {exact: d.deviceId}}});
-//          media.getVideoTracks().forEach(t => t.stop());
-      } catch (err) {
+
+    try {
+        let media = await navigator.mediaDevices.getUserMedia({
+            video: {
+                deviceId: {
+                    exact: d.deviceId
+                }
+            }
+        });
+        const track = media.getVideoTracks()[0];
+        try {
+            // Some implementations return a plain object synchronously.
+            const caps = track.getCapabilities();
+            // Ensure serializable JSON (defensive copy)
+            base.capabilities = JSON.parse(JSON.stringify(caps));
+        } catch (err) {
+            base._errors = [`getCapabilities failed: ${err && err.message ? err.message : String(err)}`];
+        }
+        try {
+            const sets = track.getSettings();
+            base.settings = JSON.parse(JSON.stringify(sets));
+        } catch (err) {
+			base._errors = [`getSettings failed: ${err && err.message ? err.message : String(err)}`];
+		}
+
+        track.stop();
+        //          base.tracks = media.getTracks().map(t => {
+        //            const {id, kind, label} = t;
+        //            const baseTrack = {id, kind, label};
+        //
+        //            try {
+        //              const caps = t.getCapabilities();
+        //              baseTrack.capabilities = JSON.parse(JSON.stringify(caps));
+        //            } catch (err) {
+        //              baseTrack._errors [`getCapabilities failed: ${err && err.message ? err.message : String(err)}`];
+        //            }
+        //            return baseTrack;
+        //          });
+        //
+        //          media = await navigator.mediaDevices.getUserMedia({video: {deviceId: {exact: d.deviceId}}});
+        //          media.getVideoTracks().forEach(t => t.stop());
+    } catch (err) {
         base._track_errors = [`getTracks failed: ${err && err.message ? err.message : String(err)}`];
-      }
-
-      await sleep(500);
-
-      return base;
     }
 
-    async function enumerateWithCaps() {
-      if (!navigator.mediaDevices?.enumerateDevices) {
-        out.textContent = JSON.stringify(
-          { error: "navigator.mediaDevices.enumerateDevices() not supported in this browser." },
-          null, 2
-        );
-        return;
-      }
-      setStatus('Enumerating devices…');
+    await sleep(500);
 
-      try {
+    return base;
+}
+
+async function enumerateWithCaps() {
+    if (!navigator.mediaDevices?.enumerateDevices) {
+        out.textContent = JSON.stringify({
+            error: "navigator.mediaDevices.enumerateDevices() not supported in this browser."
+        },
+                null, 2);
+        return;
+    }
+    setStatus('Enumerating devices…');
+
+    try {
         const devices = await navigator.mediaDevices.enumerateDevices();
-		const videoDevices = devices.filter(d => d.kind === "videoinput");
+        const videoDevices = devices.filter(d => d.kind === "videoinput");
 
         // Map each device, attaching capabilities ONLY when it’s an InputDeviceInfo
         const simplified = [];
-        for (const device of videoDevices){
+        for (const device of videoDevices) {
             simplified.push(await simplifyDevice(devices[i]));
         }
 
         out.textContent = JSON.stringify(simplified, null, 2);
         setStatus(`Found ${devices.length} device(s).`);
-      } catch (e) {
-        out.textContent = JSON.stringify(
-          { error: String(e && e.message ? e.message : e) },
-          null, 2
-        );
+    } catch (e) {
+        out.textContent = JSON.stringify({
+            error: String(e && e.message ? e.message : e)
+        },
+                null, 2);
         setStatus('Enumeration failed.', 'err');
-      }
     }
+}
 
-    async function grantOnce() {
-      try {
+async function grantOnce() {
+    try {
         setStatus('Requesting mic/cam permission…');
-        let media = await navigator.mediaDevices.getUserMedia({ video: true });
+        let media = await navigator.mediaDevices.getUserMedia({
+            video: true
+        });
         // media.getVideoTracks().forEach(t => t.stop());
         setStatus('Permission handled.');
         await enumerateWithCaps();
-      } catch (e) { 
-        out.textContent = JSON.stringify(
-          { error: String(e && e.message ? e.message : e) },
-          null, 2
-        );
+    } catch (e) {
+        out.textContent = JSON.stringify({
+            error: String(e && e.message ? e.message : e)
+        },
+                null, 2);
         setStatus('Permission denied or unavailable.', 'warn');
-      }
     }
+}
 
-    // Wire up UI
-    refreshBtn.addEventListener('click', enumerateWithCaps);
-    grantBtn.addEventListener('click', grantOnce);
+// Wire up UI
+refreshBtn.addEventListener('click', enumerateWithCaps);
+grantBtn.addEventListener('click', grantOnce);
 
-    // // Initial load
-    // enumerateWithCaps();
+// // Initial load
+// enumerateWithCaps();
 
-    // // Re-enumerate when device list changes
-    // if (navigator.mediaDevices?.addEventListener) {
-    //   navigator.mediaDevices.addEventListener('devicechange', enumerateWithCaps);
-    // }
-  </script>
-</body>
-</html>
+// // Re-enumerate when device list changes
+// if (navigator.mediaDevices?.addEventListener) {
+//   navigator.mediaDevices.addEventListener('devicechange', enumerateWithCaps);
+// }
+ <  / script >
+ <  / body >
+<  / html >
