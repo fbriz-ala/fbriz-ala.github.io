@@ -113,9 +113,9 @@
 //
 //          media = await navigator.mediaDevices.getUserMedia({video: {deviceId: {exact: d.deviceId}}});
 //          media.getVideoTracks().forEach(t => t.stop());
-//      } catch (err) {
-//        base._track_errors = [`getTracks failed: ${err && err.message ? err.message : String(err)}`];
-//      }
+      } catch (err) {
+        base._track_errors = [`getTracks failed: ${err && err.message ? err.message : String(err)}`];
+      }
 
       await sleep(500);
 
