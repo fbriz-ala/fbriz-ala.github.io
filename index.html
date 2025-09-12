@@ -94,6 +94,7 @@
 		const sets = track.getSettings();
 		base.settings = JSON.parse(JSON.stringify(sets));
 	  } catch (err){
+		  base._errors = [`getSettings failed: ${err && err.message ? err.message : String(err)}`];
 	  }
           
 		  track.stop();
