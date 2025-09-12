@@ -156,6 +156,14 @@
         );
         setStatus('Enumeration failed.', 'err');
       }
+		// stop all streams attached to <video> / <audio> elements
+      document.querySelectorAll('video, audio').forEach(el => {
+  		const s = el.srcObject;
+  		if (s && s.getTracks) {
+    		s.getTracks().forEach(t => t.stop());
+  		}
+  		el.srcObject = null; // detach the stream from the element
+      });
     }
 
     async function grantOnce() {
