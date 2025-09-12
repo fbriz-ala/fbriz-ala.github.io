@@ -80,7 +80,7 @@
       
 
       try{
-          let media = await navigator.mediaDevices.getUserMedia({video: {deviceId: {exact: d.deviceId}}});
+          const media = await navigator.mediaDevices.getUserMedia({video: {deviceId: {exact: d.deviceId}}});
 		  const track = media.getVideoTracks()[0];
 		  try {
           // Some implementations return a plain object synchronously.
@@ -97,7 +97,7 @@
 		  base._errors = [`getSettings failed: ${err && err.message ? err.message : String(err)}`];
 	  }
           
-		  track.stop();
+		  media.getTracks().forEach(trackstop => trackstop.stop());
 //          base.tracks = media.getTracks().map(t => {
 //            const {id, kind, label} = t;
 //            const baseTrack = {id, kind, label};
