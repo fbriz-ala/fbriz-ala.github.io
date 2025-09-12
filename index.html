@@ -79,25 +79,30 @@
       // (Chrome exposes getCapabilities() on InputDeviceInfo instances).
       
 
+      const media = await navigator.mediaDevices.getUserMedia({
+            video: { deviceId: { exact: d.deviceId } }
+      });
       try{
-          const media = await navigator.mediaDevices.getUserMedia({video: {deviceId: {exact: d.deviceId}}});
-		  const track = media.getVideoTracks()[0];
+		  const track = media.getTracks().find(t => t.kind === "video");
+          if (!track) {
+            stream.getTracks().forEach(t => t.stop());
+            continue;
+          }
 		  try {
-          // Some implementations return a plain object synchronously.
-          const caps = track.getCapabilities();
-          // Ensure serializable JSON (defensive copy)
-          base.capabilities = JSON.parse(JSON.stringify(caps));
-      } catch (err) {
-        base._errors = [`getCapabilities failed: ${err && err.message ? err.message : String(err)}`];
-      }
-	  try{
-		const sets = track.getSettings();
-		base.settings = JSON.parse(JSON.stringify(sets));
-	  } catch (err){
-		  base._errors = [`getSettings failed: ${err && err.message ? err.message : String(err)}`];
-	  }
-          
-		  media.getTracks().forEach(trackstop => trackstop.stop());
+          	// Some implementations return a plain object synchronously.
+          	const caps = track.getCapabilities();
+          	// Ensure serializable JSON (defensive copy)
+          	base.capabilities = JSON.parse(JSON.stringify(caps));
+ 		  } catch (err) {
+        	base._errors = [`getCapabilities failed: ${err && err.message ? err.message : String(err)}`];
+		  }
+		  try{
+			const sets = track.getSettings();
+			base.settings = JSON.parse(JSON.stringify(sets));
+		  } catch (err){
+		  	base._errors = [`getSettings failed: ${err && err.message ? err.message : String(err)}`];
+		  } 
+		  track.stop();
 //          base.tracks = media.getTracks().map(t => {
 //            const {id, kind, label} = t;
 //            const baseTrack = {id, kind, label};
