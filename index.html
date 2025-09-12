@@ -67,61 +67,41 @@
     }
 
     async function simplifyDevice(d) {
-      // Keep the standard MediaDeviceInfo fields; add capabilities if present
       const base = {
         kind: d.kind,
         deviceId: d.deviceId,
         label: d.label,
         groupId: d.groupId
       };
+      let media;
 
-      // Only attach capabilities if this device object is an InputDeviceInfo
-      // (Chrome exposes getCapabilities() on InputDeviceInfo instances).
-      
+      try {
+        media = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: d.deviceId } } });
+        const track = media.getVideoTracks()[0];
 
-      try{
-          let media = await navigator.mediaDevices.getUserMedia({video: {deviceId: {exact: d.deviceId}}});
-		  const track = media.getVideoTracks()[0];
-		  try {
-          // Some implementations return a plain object synchronously.
-          const caps = track.getCapabilities();
-          // Ensure serializable JSON (defensive copy)
-          base.capabilities = JSON.parse(JSON.stringify(caps));
+        try {
+          base.capabilities = JSON.parse(JSON.stringify(track.getCapabilities()));
+        } catch (err) {
+          base._errors = [`getCapabilities failed: ${err.message}`];
+        }
+
+        try {
+          base.settings = JSON.parse(JSON.stringify(track.getSettings()));
+        } catch (err) {
+          base._errors = [`getSettings failed: ${err.message}`];
+        }
       } catch (err) {
-        base._errors = [`getCapabilities failed: ${err && err.message ? err.message : String(err)}`];
-      }
-	  try{
-		const sets = track.getSettings();
-		base.settings = JSON.parse(JSON.stringify(sets));
-	  } catch (err){
-		  base._errors = [`getSettings failed: ${err && err.message ? err.message : String(err)}`];
-	  }
-          
-		  track.stop();
-//          base.tracks = media.getTracks().map(t => {
-//            const {id, kind, label} = t;
-//            const baseTrack = {id, kind, label};
-//
-//            try {
-//              const caps = t.getCapabilities();
-//              baseTrack.capabilities = JSON.parse(JSON.stringify(caps));
-//            } catch (err) {
-//              baseTrack._errors [`getCapabilities failed: ${err && err.message ? err.message : String(err)}`];
-//            }
-//            return baseTrack;
-//          }); 
-//
-//          media = await navigator.mediaDevices.getUserMedia({video: {deviceId: {exact: d.deviceId}}});
-//          media.getVideoTracks().forEach(t => t.stop());
-      } catch (err) {
-        base._track_errors = [`getTracks failed: ${err && err.message ? err.message : String(err)}`];
+        if (err.name === "NotReadableError") {
+          base._track_errors = ["Device busy or already in use"];
+        } else {
+          base._track_errors = [`getUserMedia failed: ${err.name} – ${err.message}`];
+        }
       } finally {
-            if (media) {
-              media.getTracks().forEach(t => t.stop());
-            }
+        if (media) {
+          media.getTracks().forEach(t => t.stop());
+          await sleep(1000); // give hardware time to release before next device
+        }
       }
-
-      await sleep(500);
 
       return base;
     }
@@ -138,12 +118,11 @@
 
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
-		const videoDevices = devices.filter(d => d.kind === "videoinput");
+        const videoDevices = devices.filter(d => d.kind === "videoinput");
 
-        // Map each device, attaching capabilities ONLY when it’s an InputDeviceInfo
         const simplified = [];
-        for (const device of videoDevices){
-            simplified.push(await simplifyDevice(device));
+        for (const device of videoDevices) {
+          simplified.push(await simplifyDevice(device));
         }
 
         out.textContent = JSON.stringify(simplified, null, 2);
@@ -161,7 +140,7 @@
       try {
         setStatus('Requesting mic/cam permission…');
         let media = await navigator.mediaDevices.getUserMedia({ video: true });
-        // media.getVideoTracks().forEach(t => t.stop());
+        media.getTracks().forEach(t => t.stop());
         setStatus('Permission handled.');
         await enumerateWithCaps();
       } catch (e) { 
@@ -173,17 +152,8 @@
       }
     }
 
-    // Wire up UI
     refreshBtn.addEventListener('click', enumerateWithCaps);
     grantBtn.addEventListener('click', grantOnce);
-
-    // // Initial load
-    // enumerateWithCaps();
-
-    // // Re-enumerate when device list changes
-    // if (navigator.mediaDevices?.addEventListener) {
-    //   navigator.mediaDevices.addEventListener('devicechange', enumerateWithCaps);
-    // }
   </script>
 </body>
 </html>
