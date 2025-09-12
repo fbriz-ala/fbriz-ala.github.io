@@ -77,39 +77,44 @@
 
       // Only attach capabilities if this device object is an InputDeviceInfo
       // (Chrome exposes getCapabilities() on InputDeviceInfo instances).
-      try {
-        if (typeof d.getCapabilities === 'function') {
+      
+
+      try{
+          let media = await navigator.mediaDevices.getUserMedia({video: {deviceId: {exact: d.deviceId}}});
+		  const track = media.getVideoTracks()[0];
+		  try {
           // Some implementations return a plain object synchronously.
-          const caps = d.getCapabilities();
+          const caps = track.getCapabilities();
           // Ensure serializable JSON (defensive copy)
           base.capabilities = JSON.parse(JSON.stringify(caps));
-        }
       } catch (err) {
         base._errors = [`getCapabilities failed: ${err && err.message ? err.message : String(err)}`];
       }
-
-      try{
-        if (d.kind === "videoinput"){
-          let media = await navigator.mediaDevices.getUserMedia({video: {deviceId: {exact: d.deviceId}}});
-          base.tracks = media.getTracks().map(t => {
-            const {id, kind, label} = t;
-            const baseTrack = {id, kind, label};
-
-            try {
-              const caps = t.getCapabilities();
-              baseTrack.capabilities = JSON.parse(JSON.stringify(caps));
-            } catch (err) {
-              baseTrack._errors [`getCapabilities failed: ${err && err.message ? err.message : String(err)}`];
-            }
-            return baseTrack;
-          });
-
-          media = await navigator.mediaDevices.getUserMedia({video: {deviceId: {exact: d.deviceId}}});
-          media.getVideoTracks().forEach(t => t.stop());
-        }
-      } catch (err) {
-        base._track_errors = [`getTracks failed: ${err && err.message ? err.message : String(err)}`];
-      }
+	  try{
+		const sets = track.getSettings();
+		base.settings = JSON.parse(JSON.stringify(sets));
+	  } catch (err){
+	  }
+          
+		  track.stop();
+//          base.tracks = media.getTracks().map(t => {
+//            const {id, kind, label} = t;
+//            const baseTrack = {id, kind, label};
+//
+//            try {
+//              const caps = t.getCapabilities();
+//              baseTrack.capabilities = JSON.parse(JSON.stringify(caps));
+//            } catch (err) {
+//              baseTrack._errors [`getCapabilities failed: ${err && err.message ? err.message : String(err)}`];
+//            }
+//            return baseTrack;
+//          }); 
+//
+//          media = await navigator.mediaDevices.getUserMedia({video: {deviceId: {exact: d.deviceId}}});
+//          media.getVideoTracks().forEach(t => t.stop());
+//      } catch (err) {
+//        base._track_errors = [`getTracks failed: ${err && err.message ? err.message : String(err)}`];
+//      }
 
       await sleep(500);
 
@@ -128,10 +133,11 @@
 
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
+		const videoDevices = devices.filter(d => d.kind === "videoinput");
 
         // Map each device, attaching capabilities ONLY when it’s an InputDeviceInfo
         const simplified = [];
-        for (let i = 0 ; i < devices.length; i++) {
+        for (const device of videoDevices){
             simplified.push(await simplifyDevice(devices[i]));
         }
 
@@ -150,7 +156,7 @@
       try {
         setStatus('Requesting mic/cam permission…');
         let media = await navigator.mediaDevices.getUserMedia({ video: true });
-        media.getVideoTracks().forEach(t => t.stop());
+        // media.getVideoTracks().forEach(t => t.stop());
         setStatus('Permission handled.');
         await enumerateWithCaps();
       } catch (e) { 
