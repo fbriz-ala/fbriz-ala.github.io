@@ -115,6 +115,10 @@
 //          media.getVideoTracks().forEach(t => t.stop());
       } catch (err) {
         base._track_errors = [`getTracks failed: ${err && err.message ? err.message : String(err)}`];
+      } finally {
+            if (media) {
+              media.getTracks().forEach(t => t.stop());
+            }
       }
 
       await sleep(500);
@@ -140,13 +144,6 @@
         const simplified = [];
         for (const device of videoDevices){
             simplified.push(await simplifyDevice(device));
-			document.querySelectorAll('video, audio').forEach(el => {
-  const s = el.srcObject;
-  if (s && s.getTracks) {
-    s.getTracks().forEach(t => t.stop());
-  }
-  el.srcObject = null; // detach the stream from the element
-});
         }
 
         out.textContent = JSON.stringify(simplified, null, 2);
