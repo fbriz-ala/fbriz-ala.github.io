@@ -139,7 +139,7 @@
         // Map each device, attaching capabilities ONLY when it’s an InputDeviceInfo
         const simplified = [];
         for (const device of videoDevices){
-            simplified.push(await simplifyDevice(devices[i]));
+            simplified.push(await simplifyDevice(device));
         }
 
         out.textContent = JSON.stringify(simplified, null, 2);
