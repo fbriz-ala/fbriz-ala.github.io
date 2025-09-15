@@ -84,10 +84,6 @@
       });
       try{
 		  const track = media.getTracks().find(t => t.kind === "video");
-          if (!track) {
-            stream.getTracks().forEach(t => t.stop());
-            continue;
-          }
 		  try {
           	// Some implementations return a plain object synchronously.
           	const caps = track.getCapabilities();
